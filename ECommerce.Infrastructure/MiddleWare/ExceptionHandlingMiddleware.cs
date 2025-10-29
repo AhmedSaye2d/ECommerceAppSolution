@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using ECommerceApp.Application.Services.Interfaces.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel.Design;
 using System.Text.Json;
 namespace ECommerce.Infrastructure.MiddleWare
@@ -23,10 +25,12 @@ namespace ECommerce.Infrastructure.MiddleWare
             }
             catch (DbUpdateException ex)
             {
+                var logger = context.RequestServices.GetRequiredService<IAppLogger<ExceptionHandlingMiddleware>>();
                 context.Response.ContentType = "application/json";
 
                 if (ex.InnerException is SqlException innerException)
                 {
+                    logger.LogError(innerException, "SQl EXCPTION");
                     switch (innerException.Number)
                     {
                         case 2627: 
@@ -37,7 +41,7 @@ namespace ECommerce.Infrastructure.MiddleWare
                             }));
                             break;
 
-                        case 515: // Cannot insert null
+                        case 515: 
                             context.Response.StatusCode = StatusCodes.Status400BadRequest;
                             await context.Response.WriteAsync(JsonSerializer.Serialize(new
                             {
@@ -45,7 +49,7 @@ namespace ECommerce.Infrastructure.MiddleWare
                             }));
                             break;
 
-                        case 547: // Foreign key constraint violation
+                        case 547: 
                             context.Response.StatusCode = StatusCodes.Status400BadRequest;
                             await context.Response.WriteAsync(JsonSerializer.Serialize(new
                             {
@@ -64,6 +68,7 @@ namespace ECommerce.Infrastructure.MiddleWare
                 }
                 else
                 {
+                    logger.LogError(ex, "REALATED EFCORE EXCPTION");
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     await context.Response.WriteAsync(JsonSerializer.Serialize(new
                     {
@@ -73,7 +78,8 @@ namespace ECommerce.Infrastructure.MiddleWare
             }
             catch (Exception ex)
             {
-                context.Response.ContentType = "application/json";
+                var logger = context.RequestServices.GetRequiredService<IAppLogger<ExceptionHandlingMiddleware>>();
+                logger.LogError(ex, "UNKnown Excption");
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
                 await context.Response.WriteAsync(JsonSerializer.Serialize(new
