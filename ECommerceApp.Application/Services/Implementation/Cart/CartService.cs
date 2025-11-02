@@ -20,6 +20,11 @@ namespace ECommerceApp.Application.Services.Implementation.Cart
             else return new ServiceResponse(false, "Invalid payment method");
         }
 
+        public Task<ServiceResponse> GetAchieve(CheckOut checkOut)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<ServiceResponse> SaveCheckoutHistory(IEnumerable<CreateAchieve> achieves)
         {
             var mappedData = mapper.Map<IEnumerable<Achieve>>(achieves);

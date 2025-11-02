@@ -23,7 +23,7 @@ namespace ECommerce.Host.Controllers
             var result = await cartService.CheckOut(checkOut);
             return result.Success ? Ok(result) : BadRequest(result);
         }
-        [HttpPost]
+        [HttpPost("Save-checkout")]
         public async Task<IActionResult> SaveChekout(IEnumerable<CreateAchieve> createAchieves)
         {
             var result=await cartService.SaveCheckoutHistory(createAchieves);
