@@ -24,4 +24,3 @@ namespace ECommerceApp.Application.Validation
     }
 
 }
-

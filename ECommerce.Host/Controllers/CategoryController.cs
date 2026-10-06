@@ -1,4 +1,4 @@
-﻿using ECommerceApp.Application.Dto.Category;
+using ECommerceApp.Application.Dto.Category;
 using ECommerceApp.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 namespace ECommerce.Host.Controllers
@@ -47,7 +47,7 @@ namespace ECommerce.Host.Controllers
             return result.Success ? Ok(result) : NotFound(result);
         }
         [HttpDelete("Delete/{id}")]
-        public async Task<IActionResult> DeleteCateroy(Guid id)
+        public async Task<IActionResult> DeleteCategory(Guid id)
         {
             var result = await IcategoryService.DeleteAsync(id);
             return result.Success ? Ok(result) :BadRequest(result);

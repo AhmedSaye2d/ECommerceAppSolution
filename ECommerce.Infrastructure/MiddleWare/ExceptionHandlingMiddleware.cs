@@ -1,10 +1,8 @@
-﻿using AutoMapper;
-using ECommerceApp.Application.Services.Interfaces.Logging;
+﻿using ECommerceApp.Application.Services.Interfaces.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using System.ComponentModel.Design;
 using System.Text.Json;
 namespace ECommerce.Infrastructure.MiddleWare
 {

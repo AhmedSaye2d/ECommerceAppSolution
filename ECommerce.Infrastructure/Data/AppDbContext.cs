@@ -1,6 +1,7 @@
-﻿using ECommerceApp.Domain.Entities;
+using ECommerceApp.Domain.Entities;
 using ECommerceApp.Domain.Entities.Cart;
 using ECommerceApp.Domain.Entities.Identity;
+using ECommerceApp.Domain.Entities.Order;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -19,9 +20,20 @@ namespace ECommerce.Infrastructure.Data
         public DbSet<RefreshToken> RefreshToken { get; set; }
         public DbSet<PaymentMethod> PaymentMethods { get; set; }
         public DbSet<Achieve> CheckoutAchieves {  get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<Order>()
+                .Property(o => o.TotalAmount)
+                .HasColumnType("decimal(18,2)");
+
+            builder.Entity<OrderItem>()
+                .Property(oi => oi.Price)
+                .HasColumnType("decimal(18,2)");
+
             builder.Entity<PaymentMethod>()
                .HasData(
                new PaymentMethod

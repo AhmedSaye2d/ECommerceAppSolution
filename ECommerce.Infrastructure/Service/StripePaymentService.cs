@@ -1,4 +1,4 @@
-﻿using ECommerceApp.Application.Dto.Cart;
+using ECommerceApp.Application.Dto.Cart;
 using ECommerceApp.Application.Dto.Product;
 using ECommerceApp.Application.Services.Implementation.Cart;
 using ECommerceApp.Application.Services.Interfaces.Cart;
@@ -40,7 +40,7 @@ namespace ECommerce.Infrastructure.Service
                 }
                 var options = new SessionCreateOptions
                 {
-                    PaymentMethodTypes = ["usd"],
+                    PaymentMethodTypes = ["card"],
                     LineItems = lineitem,
                     Mode = "payment",
                     SuccessUrl = "https://localhost:44353/payment-success",
@@ -49,7 +49,8 @@ namespace ECommerce.Infrastructure.Service
                 var service = new SessionService();
                 Session session = await service.CreateAsync(options);
                 return new ServiceResponse(true, session.Url);
-            }catch(Exception ex)
+            }
+            catch(Exception ex)
             {
                 return new ServiceResponse(false, ex.Message);
             }

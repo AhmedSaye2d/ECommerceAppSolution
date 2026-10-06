@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ECommerceApp.Application.Services.Interfaces.Logging
+﻿namespace ECommerceApp.Application.Services.Interfaces.Logging
 {
     public interface IAppLogger<T>
     {

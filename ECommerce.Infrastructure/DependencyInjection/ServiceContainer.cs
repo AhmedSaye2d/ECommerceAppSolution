@@ -1,4 +1,4 @@
-﻿using ECommerce.Infrastructure.Data;
+using ECommerce.Infrastructure.Data;
 using ECommerce.Infrastructure.MiddleWare;
 using ECommerce.Infrastructure.Repository;
 using ECommerce.Infrastructure.Repository.Authentication;
@@ -42,12 +42,13 @@ namespace ECommerce.Infrastructure.DependencyInjection
 
                 ServiceLifetime.Scoped);
             services.AddScoped<IGeneric<Product>, GenericRepository<Product>>();
+            services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IGeneric<Category>, GenericRepository<Category>>();
             services.AddScoped(typeof(IAppLogger<>), typeof(SerilogLoggerAdapter<>));
-            services.AddDefaultIdentity<AppUser> (options=>
+            services.AddDefaultIdentity<AppUser>(options =>
             {
-                options.SignIn.RequireConfirmedEmail = true;
-                options.Tokens.EmailConfirmationTokenProvider=TokenOptions.DefaultEmailProvider;
+                options.SignIn.RequireConfirmedEmail = false;
+                options.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
                 options.Password.RequireDigit = true;
                 options.Password.RequiredLength = 8;
                 options.Password.RequireLowercase = true;
@@ -80,6 +81,7 @@ namespace ECommerce.Infrastructure.DependencyInjection
             services.AddScoped<IRoleManagement, RoleManagement>();
             services.AddScoped<IPaymentMethod, PaymentMethodRepository>();
             services.AddScoped<IPaymentService,StripePaymentService>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
             Stripe.StripeConfiguration.ApiKey = config["Stripe:Secretkey"];
 
             return services;

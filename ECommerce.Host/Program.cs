@@ -1,8 +1,5 @@
-﻿using ECommerce.Infrastructure.DependencyInjection;
+using ECommerce.Infrastructure.DependencyInjection;
 using ECommerceApp.Application.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace ECommerce.Host
@@ -38,7 +35,7 @@ namespace ECommerce.Host
                     policy
                         .AllowAnyHeader()
                         .AllowAnyMethod()
-                        .AllowAnyOrigin(); // استخدم AllowAnyOrigin لو front والback نفس الجهاز
+                        .AllowAnyOrigin();
                 });
             });
 
@@ -57,11 +54,12 @@ namespace ECommerce.Host
                     app.UseSwaggerUI();
                 }
 
-                // ✅ مهم جدًا علشان يقدر يقرأ ملفات الواجهة الأمامية (index.html و css و js)
-                app.UseDefaultFiles();  // بيدور تلقائيًا على index.html
-                app.UseStaticFiles();   // يخلي السيرفر يقدّم ملفات wwwroot
+               
+                app.UseDefaultFiles(); 
+                app.UseStaticFiles(); 
 
                 app.UseHttpsRedirection();
+                app.UseAuthentication();
                 app.UseAuthorization();
                 app.MapControllers();
 

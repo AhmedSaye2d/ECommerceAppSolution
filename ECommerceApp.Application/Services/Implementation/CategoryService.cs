@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using ECommerceApp.Application.Dto.Category;
 using ECommerceApp.Application.Dto.Product;
 using ECommerceApp.Application.Services.Interfaces;
@@ -12,15 +12,15 @@ namespace ECommerceApp.Application.Services.Implementation
         {
             var mapdata=mapper.Map<Category>(category);
             var result = await CategoryInterface.AddAsync(mapdata);
-                return result > 0 ? new ServiceResponse(true, "Category in Delete") :
-                new ServiceResponse(false, "Category Falied to be Delete");
+                 return result > 0 ? new ServiceResponse(true, "Category added successfully") :
+                 new ServiceResponse(false, "Category failed to be added");
         }
 
         public async Task<ServiceResponse> DeleteAsync(Guid id)
         {
             var result = await CategoryInterface.DeleteAsync(id);
-            return result > 0 ? new ServiceResponse(true, "Category in Delete") :
-                new ServiceResponse(false, "Category Falied to be Delete");
+            return result > 0 ? new ServiceResponse(true, "Category deleted successfully") :
+                 new ServiceResponse(false, "Category failed to be deleted");
 
         }
 
@@ -48,8 +48,8 @@ namespace ECommerceApp.Application.Services.Implementation
         {
             var mappData = mapper.Map<Category>(category);
             var result = await CategoryInterface.UpdateAsync(mappData); 
-            return result > 0 ? new ServiceResponse(true, "Category update")
-               : new ServiceResponse(false, "Category Falied to be update");
+            return result > 0 ? new ServiceResponse(true, "Category updated successfully")
+               : new ServiceResponse(false, "Category failed to be updated");
         }
     }
 }

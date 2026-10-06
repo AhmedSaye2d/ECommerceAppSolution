@@ -120,7 +120,7 @@ namespace ECommerceApp.Application.Services.Implementation.Authentication
                 return new LoginResponse { Success = false, Message = "User not found for this token" };
 
             var user = await _userManagement.GetUserById(userId);
-            if (user == null)
+            if (user == null)                                        
                 return new LoginResponse { Success = false, Message = "User not found" };
 
             var claims = await _userManagement.GetUserClaim(user.Email!);

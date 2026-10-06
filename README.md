@@ -1,41 +1,80 @@
-This project is a scalable E-Commerce Backend application built using C# and ASP.NET Core, following Clean Architecture principles and the Repository Pattern to ensure maintainability, testability, and separation of concerns.
+# E-Commerce Backend Application
 
-🔧 Technologies & Tools
+A scalable E-Commerce Backend built with C# and ASP.NET Core, following Clean Architecture principles and Repository Pattern for maintainability, testability, and separation of concerns.
 
-C# & ASP.NET Core
+## Technologies & Tools
 
-Entity Framework Core (EF Core)
+- **C# & ASP.NET Core**
+- **Entity Framework Core (EF Core)**
+- **LINQ** for efficient data querying
+- **Clean Architecture**
+- **Repository Pattern**
+- **JWT Authentication & Refresh Tokens**
+- **Stripe Payment Gateway Integration**
+- **Custom Middleware** for centralized error handling
+- **Serilog** for structured logging and monitoring
 
-LINQ for efficient data querying
+## Key Features
 
-Clean Architecture
+### 1. Authentication & Authorization
+- User registration
+- Login with JWT token
+- Refresh token support
+- Role-based authorization (Admin/User)
 
-Repository Pattern
+### 2. Product Management
+- Get all products
+- Search and filter products with query parameters
+- Get single product by ID
+- Add new product
+- Update product
+- Delete product
 
-JWT Authentication & Refresh Tokens
+### 3. Category Management
+- Get all categories
+- Get single category
+- Add new category
+- Update category
+- Delete category
 
-Stripe Payment Gateway Integration
+### 4. Order Management
+- Create new order
+- Get user orders
+- Get order by ID
+- Cancel order
+- Update order status (Admin only)
 
-Custom Middleware
+### 5. Cart & Checkout
+- Checkout process
+- Save checkout history
+- View available payment methods (Stripe Integration)
 
-Global Exception Handling
+### 6. Infrastructure
+- Centralized error handling via Custom Middleware
+- Structured logging with Serilog
+- Clean layer separation (Domain, Application, Infrastructure, Host)
 
-Serilog for structured logging and monitoring
+## Project Structure
 
-🚀 Key Features
+```
+ECommerceAppSolution/
+├── ECommerce.Host/           # Web API Layer
+│   ├── Controllers/          # API Controllers
+│   └── Program.cs            # Application Entry Point
+├── ECommerceApp.Application/ # Business Logic Layer
+│   ├── Services/             # Service Implementations
+│   ├── Dto/                  # Data Transfer Objects
+│   └── Mapping/              # Object Mapping
+├── ECommerceApp.Domain/      # Domain Layer
+│   ├── Entities/             # Domain Entities
+│   └── Interface/            # Repository Interfaces
+└── ECommerce.Infrastructure/ # Infrastructure Layer
+    ├── Repository/           # Repository Implementations
+    ├── Service/              # External Service Integrations
+    ├── MiddleWare/           # Custom Middleware
+    └── Data/                 # Database Context
+```
 
-Secure authentication and authorization using JWT and Refresh Tokens
+## Objective
 
-User, product, and order management
-
-Online payment processing using Stripe
-
-Centralized error handling with custom middleware
-
-Structured logging with Serilog
-
-Clean, modular, and extensible architecture
-
-🎯 Project Objective
-
-The goal of this project is to build a real-world E-Commerce backend that applies best practices in backend development and software architecture, simulating production-level systems.
+Build a real-world E-Commerce backend applying best practices in backend development and software architecture, simulating production-level systems.

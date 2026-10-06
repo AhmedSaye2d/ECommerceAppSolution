@@ -1,4 +1,4 @@
-﻿using ECommerce.Infrastructure.Data;
+﻿ using ECommerce.Infrastructure.Data;
 using ECommerceApp.Domain.Entities.Identity;
 using ECommerceApp.Domain.Interface.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -12,7 +12,7 @@ namespace ECommerce.Infrastructure.Repository.Authentication
         public async Task<bool> CreateUser(AppUser user)
         {
             var _user = await GetUserByEmail(user.Email!);
-            if (_user != null)
+            if (_user != null) 
             {
                 return false;   
             }

@@ -11,6 +11,7 @@ namespace ECommerce.Infrastructure.Repository
         public async Task<int> AddAsync(TEntity entity)
         {
             context.Set<TEntity>().AddAsync(entity);
+
             return await context.SaveChangesAsync();
         }
 

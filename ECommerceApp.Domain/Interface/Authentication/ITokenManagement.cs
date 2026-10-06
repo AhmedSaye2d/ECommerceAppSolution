@@ -25,9 +25,10 @@ namespace ECommerceApp.Domain.Interface.Authentication
 
             // إضافة Refresh Token جديد للمستخدم
             Task<int> AddRefreshToken(string userId, string refreshToken);
-
+            
             // تحديث Refresh Token لمستخدم موجود
             Task<int> UpdateRefreshToken(string userId, string refreshToken);
+
             Task<bool> ValidateRefreshTokenForUser(string userId);
         }
     }
