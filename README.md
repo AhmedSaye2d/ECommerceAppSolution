@@ -27,3 +27,50 @@ The system provides an enterprise-ready backbone for e-commerce operations, feat
 - **API Documentation:** Swagger / OpenAPI UI
 
 ---
+
+## 🏛️ System Architecture
+
+The solution is architected following **Clean Architecture (Onion Architecture)** guidelines to enforce strict separation of concerns, testability, and independence from external frameworks and database mechanisms. Dependencies strictly point inward toward the core domain.
+
+`mermaid
+graph TD
+    subgraph Presentation ["1. Presentation Layer (ECommerce.Host)"]
+        Controllers[API Controllers]
+        Middlewares[Exception & Logging Middlewares]
+        Swagger[Swagger / OpenAPI Documentation]
+    end
+
+    subgraph Application ["2. Application Layer (ECommerceApp.Application)"]
+        Services[Application Services]
+        DTOs[Data Transfer Objects DTOs]
+        Validation[FluentValidation Rules]
+        Mapping[AutoMapper Profiles]
+    end
+
+    subgraph Infrastructure ["3. Infrastructure Layer (ECommerce.Infrastructure)"]
+        DbContext[AppDbContext & Migrations]
+        Repositories[Generic & Specialized Repositories]
+        Identity[ASP.NET Identity & JWT Token Management]
+        StripeClient[Stripe Checkout Integration]
+        SerilogAdapter[Serilog Structured Logger Adapter]
+    end
+
+    subgraph Domain ["4. Domain Layer (ECommerceApp.Domain)"]
+        Entities[Domain Entities]
+        DomainInterfaces[Repository & Service Interfaces]
+        Enums[Enums & Value Objects]
+    end
+
+    Presentation --> Application
+    Infrastructure --> Application
+    Infrastructure --> Domain
+    Application --> Domain
+`
+
+### Layer Responsibilities:
+1. **Domain:** The enterprise core containing domain models (Product, Category, Order, OrderItem, AppUser, RefreshToken, PaymentMethod, Achieve), domain enums (OrderStatus), and interface definitions. Contains zero external dependencies.
+2. **Application:** Implements use cases and business workflows (OrderService, ProductService, AuthenticationService, CartService), input validation, and DTO projections.
+3. **Infrastructure:** Manages database interaction, EF Core configuration, SQL Server error translation, Stripe payment processing, and logging adapters.
+4. **Host (Presentation):** ASP.NET Core Web API host managing routing, controller endpoints, dependency injection bootstrapping, and middleware pipeline registration.
+
+---
