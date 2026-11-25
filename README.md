@@ -387,3 +387,50 @@ ame_desc) with custom page sizes.
 | PUT | /api/Orders/{id}/status | Admin | Update order status (Pending ➔ Processing ➔ Shipped ➔ Delivered) |
 
 ---
+
+## 🚀 Getting Started & Local Setup
+
+### Prerequisites
+- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [SQL Server](https://www.microsoft.com/sql-server) (LocalDB, Express, or Full)
+- [Stripe Account](https://stripe.com) (for test API Secret Key)
+
+### 1. Clone the Repository
+`ash
+git clone https://github.com/AhmedSaye2d/ECommerceAppSolution.git
+cd ECommerceAppSolution
+`
+
+### 2. Configure ppsettings.json
+Update ECommerce.Host/appsettings.json with your SQL Server connection string and credentials:
+
+`json
+{
+  "ConnectionStrings": {
+    "Default": "Server=.;Database=ECommerceDb;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Jwt": {
+    "Key": "YOUR_SUPER_SECRET_SECURITY_KEY_AT_LEAST_32_CHARS_LONG",
+    "Issuer": "https://localhost:44353",
+    "Audience": "https://localhost:44353"
+  },
+  "Stripe": {
+    "Secretkey": "sk_test_YOUR_STRIPE_SECRET_KEY"
+  }
+}
+`
+
+### 3. Apply EF Core Migrations
+Execute the migrations to generate database schema and initial seed data:
+`ash
+dotnet ef database update --project ECommerce.Infrastructure --startup-project ECommerce.Host
+`
+
+### 4. Run the Application
+`ash
+dotnet run --project ECommerce.Host
+`
+Once launched, navigate to the interactive Swagger documentation:
+👉 https://localhost:44353/swagger
+
+---
