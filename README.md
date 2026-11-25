@@ -299,3 +299,33 @@ flowchart LR
 - **SQL Case-Insensitive Search:** LINQ .Contains() translates to SQL LIKE '%term%' handled by the database engine.
 
 ---
+
+## 📦 Core Business Modules & Capabilities
+
+### 1. Identity & Access Management (IAM)
+- **User Registration:** Validated via FluentValidation for strong password policies (min 8 chars, uppercase, lowercase, digit, special symbol).
+- **Self-Bootstrapping Admin:** First registered user automatically acquires the Admin role; subsequent users receive User.
+- **Compensating Rollback:** If role assignment fails during signup, the user entity is deleted automatically to prevent orphan accounts.
+- **JWT Authentication:** Issues signed HMAC-SHA256 JWT tokens containing FullName, Email, NameIdentifier, and Role claims.
+- **Refresh Token Rotation:** Employs single-use refresh tokens stored in SQL Server with cryptographic RNG generation.
+
+### 2. Catalog & Category Management
+- **Category CRUD:** Create, read, update, and delete product categories.
+- **Product Management:** Complete product information handling (Title, Description, Image URL, Stock Quantity, Price).
+- **Search & Multi-Filter:** Filter by category, minimum price, maximum price, text search across titles and descriptions.
+- **Dynamic Pagination:** Server-side sorting (price_asc, price_desc, 
+ame_asc, 
+ame_desc) with custom page sizes.
+
+### 3. Cart, Checkout & Stripe Payment
+- **Price Verification:** Recalculates cart amounts strictly on the server to prevent front-end client price tampering.
+- **Stripe Hosted Checkout:** Formats line items with cents conversion, sets redirect callback URLs, and returns Stripe session links.
+- **Checkout History:** Logs checkout history into Achieve entity for auditing and cart recovery analysis.
+
+### 4. Order Lifecycle Management
+- **Order Placement:** Converts cart items into permanent order entities and captures unit prices at the time of purchase.
+- **Ownership Verification:** Users can only view and cancel their own orders; Admins can view all orders.
+- **Status State Machine:** Orders transition across Pending ➔ Processing ➔ Shipped ➔ Delivered (or Cancelled).
+- **Cancellation Constraints:** Customers can only cancel orders while status is Pending.
+
+---
