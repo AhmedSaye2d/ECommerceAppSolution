@@ -260,3 +260,42 @@ sequenceDiagram
 `
 
 ---
+
+## ⚡ High-Performance Product Query Pipeline
+
+To serve fast catalog browsing with thousands of SKU items, ProductRepository constructs a dynamic deferred IQueryable pipeline that executes completely inside SQL Server.
+
+`mermaid
+flowchart LR
+    A[Client Request<br/>GET /api/Product?search=...&categoryId=...&minPrice=...&maxPrice=...&sortBy=...&pageNumber=1&pageSize=10] --> B[ProductController]
+    B --> C[ProductService.GetProductsAsync]
+    C --> D[ProductRepository.GetProductsAsync]
+    
+    subgraph Pipeline ["Server-Side LINQ Execution Pipeline"]
+        D --> E[Start: IQueryable<Product><br/>.Include Category<br/>.AsNoTracking]
+        E --> F{Category Filter?}
+        F -- Yes --> F1[Where CategoryId == val]
+        F -- No --> G{Price Range Filter?}
+        F1 --> G
+        G -- Yes --> G1[Where Price >= min & Price <= max]
+        G -- No --> H{Search Term?}
+        G1 --> H
+        H -- Yes --> H1[Where Name.Contains or Description.Contains]
+        H -- No --> I[CountAsync<br/>Fetch Total Filtered Count]
+        H1 --> I
+        I --> J[Dynamic Sorting<br/>Switch: Price Asc/Desc, Name Asc/Desc]
+        J --> K[Skip page - 1 * pageSize<br/>Take pageSize<br/>ToListAsync]
+    end
+
+    K --> L[Return Tuple<br/>Items, TotalCount]
+    L --> M[AutoMapper: Map to IEnumerable<GetProduct>]
+    M --> N[Return PaginatedResult<GetProduct><br/>Items, TotalCount, PageNumber, PageSize]
+    N --> O[HTTP 200 OK Response]
+`
+
+### Key Optimizations:
+- **AsNoTracking():** Disables EF Core Change Tracker allocations for read-only queries.
+- **Single Roundtrip:** Total count and paginated items are queried efficiently without pulling full dataset into memory.
+- **SQL Case-Insensitive Search:** LINQ .Contains() translates to SQL LIKE '%term%' handled by the database engine.
+
+---
