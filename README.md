@@ -341,3 +341,49 @@ ame_desc) with custom page sizes.
 | **5** | **Inconsistent State on Registration Failure** | Users created in Identity tables without assigned roles when role mapping fails. | Compensating transaction logic in AuthenticationService rolling back user creation if role assignment fails. | Guarantees database consistency and eliminates orphaned user records. |
 
 ---
+
+## 🔌 API Endpoints Catalog (22 Verified Endpoints)
+
+### 🔑 Authentication (/api/Authentication)
+| Method | Endpoint | Authorization | Description |
+|--------|----------|---------------|-------------|
+| POST | /api/Authentication/Create | Public | Register new user (First user becomes Admin) |
+| POST | /api/Authentication/Login | Public | Authenticate user and receive JWT + Refresh Token |
+| POST | /api/Authentication/refresh-token | Public | Refresh expired JWT using valid Refresh Token |
+
+### 📦 Products (/api/Product)
+| Method | Endpoint | Authorization | Description |
+|--------|----------|---------------|-------------|
+| GET | /api/Product/all | Public | Retrieve list of all products |
+| GET | /api/Product | Public | Search, filter by category/price, sort, and paginate |
+| GET | /api/Product/Single/{id} | Public | Retrieve single product details by GUID |
+| POST | /api/Product/Add | Admin | Add new product to catalog |
+| PUT | /api/Product/Update | Admin | Update existing product |
+| DELETE | /api/Product/Delete/{id} | Admin | Delete product from catalog |
+
+### 🏷️ Categories (/api/Category)
+| Method | Endpoint | Authorization | Description |
+|--------|----------|---------------|-------------|
+| GET | /api/Category/all | Public | Retrieve all product categories |
+| GET | /api/Category/Single/{id} | Public | Retrieve category by GUID |
+| POST | /api/Category/Add | Admin | Create a new category |
+| PUT | /api/Category/Update | Admin | Update existing category |
+| DELETE | /api/Category/Delete/{id} | Admin | Delete category |
+
+### 🛒 Cart & Checkout (/api/Cart & /api/Payment)
+| Method | Endpoint | Authorization | Description |
+|--------|----------|---------------|-------------|
+| POST | /api/Cart/checkout | Authenticated | Validate cart prices & generate Stripe session URL |
+| POST | /api/Cart/Save-checkout | Authenticated | Archive cart items into checkout history (Achieve) |
+| GET | /api/Payment | Public | Retrieve supported payment methods |
+
+### 📋 Orders (/api/Orders)
+| Method | Endpoint | Authorization | Description |
+|--------|----------|---------------|-------------|
+| POST | /api/Orders | Authenticated | Place a new order from cart with address & phone |
+| GET | /api/Orders | Authenticated | Retrieve order history for current authenticated user |
+| GET | /api/Orders/{id} | User/Admin | Get order by ID (Enforces ownership verification) |
+| PUT | /api/Orders/{id}/cancel | User/Admin | Cancel order (Only permitted if status is Pending) |
+| PUT | /api/Orders/{id}/status | Admin | Update order status (Pending ➔ Processing ➔ Shipped ➔ Delivered) |
+
+---
