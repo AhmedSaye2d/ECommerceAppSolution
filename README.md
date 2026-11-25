@@ -434,3 +434,23 @@ Once launched, navigate to the interactive Swagger documentation:
 👉 https://localhost:44353/swagger
 
 ---
+
+## 🛡️ Security & Production Readiness
+
+- **Input Sanitization & Validation:** FluentValidation ensures no malformed or SQL injection vectors reach the service handlers.
+- **Password Hashing:** ASP.NET Core Identity uses PBKDF2 with HMAC-SHA256 and unique per-user cryptographic salts.
+- **Token Security:** JWT tokens expire in 2 hours; refresh tokens are cryptographically generated (64-byte RNG) and rotated upon each refresh.
+- **SQL Error Shielding:** Raw database exception strings are hidden from public responses to prevent schema reconnaissance.
+- **CORS Protection:** Configurable CORS policies to restrict API access to authorized frontend origins in production.
+
+---
+
+## 🗺️ Project Roadmap & Future Enhancements
+
+- [ ] **Stripe Webhooks Receiver:** Implement webhook signature verification to handle asynchronous checkout.session.completed events.
+- [ ] **Redis Distributed Caching:** Add Redis caching layer for high-demand category and catalog queries.
+- [ ] **Automated Unit & Integration Testing:** Implement xUnit test suites using WebApplicationFactory and in-memory test databases.
+- [ ] **Dockerization:** Add multi-stage Dockerfile and docker-compose.yml for unified SQL Server and API orchestration.
+- [ ] **Health Checks & OpenTelemetry:** Integrate /health endpoints and distributed tracing with Jaeger/Prometheus.
+
+---
