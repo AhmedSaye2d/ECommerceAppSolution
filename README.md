@@ -329,3 +329,15 @@ ame_desc) with custom page sizes.
 - **Cancellation Constraints:** Customers can only cancel orders while status is Pending.
 
 ---
+
+## 🧩 Key Engineering Challenges & Technical Solutions
+
+| # | Engineering Challenge | Problem & Risk | Technical Approach & Solution | Key Benefit |
+|---|----------------------|----------------|--------------------------------|-------------|
+| **1** | **Cart Price Tampering** | Malicious clients altering product prices in JSON payloads before payment. | Server-side price recalculation in OrderService & CartService fetching prices directly from DB. | 100% financial accuracy; zero reliance on untrusted client inputs. |
+| **2** | **Session Hijacking & Replay Attacks** | Stolen static refresh tokens allowing permanent unauthorized access. | Single-use Refresh Token Rotation with 64-byte RandomNumberGenerator cryptographic tokens. | Stolen tokens are immediately rendered useless upon rotation. |
+| **3** | **Memory Exhaustion on Catalog Browsing** | Loading large product tables into web server RAM for filtering and pagination. | Deferred IQueryable pipeline with AsNoTracking() executing Skip() and Take() at database level. | Minimal RAM usage and fast, scalable response times under high traffic. |
+| **4** | **Database Exception Security Leaks** | Exposing raw SQL Server errors (PK, FK, NULL violations) to public API consumers. | Custom ExceptionHandlingMiddleware intercepting SqlException error numbers (2627, 515, 547). | Sanitized, descriptive HTTP status codes (409 Conflict, 400 Bad Request) without data leakage. |
+| **5** | **Inconsistent State on Registration Failure** | Users created in Identity tables without assigned roles when role mapping fails. | Compensating transaction logic in AuthenticationService rolling back user creation if role assignment fails. | Guarantees database consistency and eliminates orphaned user records. |
+
+---
