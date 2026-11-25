@@ -150,3 +150,63 @@ erDiagram
 `
 
 ---
+
+## 🔐 Authentication & Refresh Token Rotation Flow
+
+Authentication utilizes ASP.NET Core Identity combined with stateless JWT bearer tokens for API requests and persistent Refresh Tokens stored in SQL Server.
+
+To protect against token theft and replay attacks, the platform employs **Single-Use Refresh Token Rotation**: every time a client refreshes their session, the current refresh token is invalidated and replaced with a newly minted cryptographic token.
+
+`mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Web / Mobile Client
+    participant AuthCtrl as AuthenticationController
+    participant AuthSvc as AuthenticationService
+    participant UserMgr as UserManager / Identity
+    participant TokenMgr as TokenManagement
+    participant DB as SQL Server Database
+
+    %% Registration Flow
+    rect rgb(240, 248, 255)
+    Note over Client, DB: 1. User Registration & Role Assignment
+    Client->>AuthCtrl: POST /api/Authentication/Create (User DTO)
+    AuthCtrl->>AuthSvc: CreateUser(CreateUser DTO)
+    AuthSvc->>UserMgr: CreateAsync(AppUser, Password)
+    UserMgr->>DB: INSERT into AspNetUsers
+    AuthSvc->>UserMgr: AddToRoleAsync (First User -> Admin, Subsequent -> User)
+    alt Role Assignment Fails
+        AuthSvc->>UserMgr: RemoveUserByEmail (Compensating Transaction)
+        AuthSvc-->>Client: 400 Bad Request
+    else Role Assignment Success
+        AuthSvc-->>Client: 200 OK ("User created successfully")
+    end
+    end
+
+    %% Login Flow
+    rect rgb(245, 255, 245)
+    Note over Client, DB: 2. Login & Token Issuance
+    Client->>AuthCtrl: POST /api/Authentication/Login (Email, Password)
+    AuthCtrl->>AuthSvc: LoginUser(credentials)
+    AuthSvc->>UserMgr: CheckPasswordAsync(user, password)
+    AuthSvc->>TokenMgr: GenerateToken(claims) -> Returns 2-hour JWT
+    AuthSvc->>TokenMgr: GetRefreshToken() -> Cryptographic 64-byte RNG Token
+    TokenMgr->>DB: UPSERT RefreshToken for User
+    AuthSvc-->>Client: 200 OK (JWT Access Token + Refresh Token)
+    end
+
+    %% Refresh Token Rotation Flow
+    rect rgb(255, 250, 240)
+    Note over Client, DB: 3. Single-Use Refresh Token Rotation
+    Client->>AuthCtrl: POST /api/Authentication/refresh-token (Current Refresh Token)
+    AuthCtrl->>AuthSvc: ReviveToken(refreshToken)
+    AuthSvc->>TokenMgr: ValidateRefreshToken(refreshToken)
+    TokenMgr->>DB: Verify token exists and retrieve UserId
+    AuthSvc->>TokenMgr: GenerateToken(claims) -> Fresh JWT
+    AuthSvc->>TokenMgr: GetRefreshToken() -> New Cryptographic Token
+    TokenMgr->>DB: UPDATE RefreshToken (Old token invalidated immediately)
+    AuthSvc-->>Client: 200 OK (New JWT Token + New Refresh Token)
+    end
+`
+
+---
