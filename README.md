@@ -15,6 +15,23 @@ The system provides an enterprise-ready backbone for e-commerce operations, feat
 
 ---
 
+## 📑 Table of Contents
+1. [Technology Stack & Frameworks](#-technology-stack--frameworks)
+2. [System Architecture & Clean Architecture](#-system-architecture)
+3. [Database Schema & ERD](#-database-schema--entity-relationship-diagram-erd)
+4. [Authentication & Refresh Token Rotation Flow](#-authentication--refresh-token-rotation-flow)
+5. [Checkout & Stripe Payment Processing Workflow](#-checkout--stripe-payment-processing-workflow)
+6. [High-Performance Product Query Pipeline](#-high-performance-product-query-pipeline)
+7. [Core Business Modules & Capabilities](#-core-business-modules--capabilities)
+8. [Key Engineering Challenges & Technical Solutions](#-key-engineering-challenges--technical-solutions)
+9. [API Endpoints Catalog](#-api-endpoints-catalog-22-verified-endpoints)
+10. [Getting Started & Local Setup](#-getting-started--local-setup)
+11. [Security & Production Readiness](#-security--production-readiness)
+12. [Project Roadmap & Future Enhancements](#-project-roadmap--future-enhancements)
+13. [Author & Contact](#-author--contact)
+
+---
+
 ## 🛠️ Technology Stack & Frameworks
 
 - **Runtime & Language:** .NET 8 (LTS) & C# 12
@@ -32,7 +49,7 @@ The system provides an enterprise-ready backbone for e-commerce operations, feat
 
 The solution is architected following **Clean Architecture (Onion Architecture)** guidelines to enforce strict separation of concerns, testability, and independence from external frameworks and database mechanisms. Dependencies strictly point inward toward the core domain.
 
-`mermaid
+```mermaid
 graph TD
     subgraph Presentation ["1. Presentation Layer (ECommerce.Host)"]
         Controllers[API Controllers]
@@ -65,11 +82,11 @@ graph TD
     Infrastructure --> Application
     Infrastructure --> Domain
     Application --> Domain
-`
+```
 
 ### Layer Responsibilities:
-1. **Domain:** The enterprise core containing domain models (Product, Category, Order, OrderItem, AppUser, RefreshToken, PaymentMethod, Achieve), domain enums (OrderStatus), and interface definitions. Contains zero external dependencies.
-2. **Application:** Implements use cases and business workflows (OrderService, ProductService, AuthenticationService, CartService), input validation, and DTO projections.
+1. **Domain:** The enterprise core containing domain models (`Product`, `Category`, `Order`, `OrderItem`, `AppUser`, `RefreshToken`, `PaymentMethod`, `Achieve`), domain enums (`OrderStatus`), and interface definitions. Contains zero external dependencies.
+2. **Application:** Implements use cases and business workflows (`OrderService`, `ProductService`, `AuthenticationService`, `CartService`), input validation, and DTO projections.
 3. **Infrastructure:** Manages database interaction, EF Core configuration, SQL Server error translation, Stripe payment processing, and logging adapters.
 4. **Host (Presentation):** ASP.NET Core Web API host managing routing, controller endpoints, dependency injection bootstrapping, and middleware pipeline registration.
 
@@ -77,9 +94,9 @@ graph TD
 
 ## 🗄️ Database Schema & Entity Relationship Diagram (ERD)
 
-The database design uses normalized relational schemas managed via EF Core Code-First migrations with decimal precision for currency amounts (decimal(18,2)) and foreign key constraints.
+The database design uses normalized relational schemas managed via EF Core Code-First migrations with decimal precision for currency amounts (`decimal(18,2)`) and foreign key constraints.
 
-`mermaid
+```mermaid
 erDiagram
     APP_USER ||--o{ REFRESH_TOKEN : "owns"
     APP_USER ||--o{ ORDER : "places"
@@ -147,7 +164,7 @@ erDiagram
         int Quantity "Quantity Purchased"
         datetime CreatedData "Audit Timestamp"
     }
-`
+```
 
 ---
 
@@ -157,7 +174,7 @@ Authentication utilizes ASP.NET Core Identity combined with stateless JWT bearer
 
 To protect against token theft and replay attacks, the platform employs **Single-Use Refresh Token Rotation**: every time a client refreshes their session, the current refresh token is invalidated and replaced with a newly minted cryptographic token.
 
-`mermaid
+```mermaid
 sequenceDiagram
     autonumber
     actor Client as Web / Mobile Client
@@ -207,7 +224,7 @@ sequenceDiagram
     TokenMgr->>DB: UPDATE RefreshToken (Old token invalidated immediately)
     AuthSvc-->>Client: 200 OK (New JWT Token + New Refresh Token)
     end
-`
+```
 
 ---
 
@@ -215,10 +232,10 @@ sequenceDiagram
 
 The checkout process guarantees transaction security and financial integrity:
 1. **Server-Side Price Verification:** Client-submitted prices are discarded. The backend queries SQL Server for the actual product prices, preventing price tampering.
-2. **Stripe Hosted Checkout:** Line items are formatted with description, name, and unit amount converted to cents (price * 100) and dispatched to Stripe Checkout API.
-3. **Order Snapshotting:** When an order is saved, unit prices are permanently recorded in OrderItem records so future product price updates never alter historical invoices.
+2. **Stripe Hosted Checkout:** Line items are formatted with description, name, and unit amount converted to cents (`price * 100`) and dispatched to Stripe Checkout API.
+3. **Order Snapshotting:** When an order is saved, unit prices are permanently recorded in `OrderItem` records so future product price updates never alter historical invoices.
 
-`mermaid
+```mermaid
 sequenceDiagram
     autonumber
     actor Customer as Shopper
@@ -257,15 +274,15 @@ sequenceDiagram
     OrderSvc-->>OrderCtrl: ServiceResponse("Order placed successfully")
     OrderCtrl-->>Customer: 200 OK
     end
-`
+```
 
 ---
 
 ## ⚡ High-Performance Product Query Pipeline
 
-To serve fast catalog browsing with thousands of SKU items, ProductRepository constructs a dynamic deferred IQueryable pipeline that executes completely inside SQL Server.
+To serve fast catalog browsing with thousands of SKU items, `ProductRepository` constructs a dynamic deferred `IQueryable` pipeline that executes completely inside SQL Server.
 
-`mermaid
+```mermaid
 flowchart LR
     A[Client Request<br/>GET /api/Product?search=...&categoryId=...&minPrice=...&maxPrice=...&sortBy=...&pageNumber=1&pageSize=10] --> B[ProductController]
     B --> C[ProductService.GetProductsAsync]
@@ -291,12 +308,12 @@ flowchart LR
     L --> M[AutoMapper: Map to IEnumerable<GetProduct>]
     M --> N[Return PaginatedResult<GetProduct><br/>Items, TotalCount, PageNumber, PageSize]
     N --> O[HTTP 200 OK Response]
-`
+```
 
 ### Key Optimizations:
-- **AsNoTracking():** Disables EF Core Change Tracker allocations for read-only queries.
+- **`AsNoTracking()`:** Disables EF Core Change Tracker allocations for read-only queries.
 - **Single Roundtrip:** Total count and paginated items are queried efficiently without pulling full dataset into memory.
-- **SQL Case-Insensitive Search:** LINQ .Contains() translates to SQL LIKE '%term%' handled by the database engine.
+- **SQL Case-Insensitive Search:** LINQ `.Contains()` translates to SQL `LIKE '%term%'` handled by the database engine.
 
 ---
 
@@ -304,29 +321,27 @@ flowchart LR
 
 ### 1. Identity & Access Management (IAM)
 - **User Registration:** Validated via FluentValidation for strong password policies (min 8 chars, uppercase, lowercase, digit, special symbol).
-- **Self-Bootstrapping Admin:** First registered user automatically acquires the Admin role; subsequent users receive User.
+- **Self-Bootstrapping Admin:** First registered user automatically acquires the `Admin` role; subsequent users receive `User`.
 - **Compensating Rollback:** If role assignment fails during signup, the user entity is deleted automatically to prevent orphan accounts.
-- **JWT Authentication:** Issues signed HMAC-SHA256 JWT tokens containing FullName, Email, NameIdentifier, and Role claims.
+- **JWT Authentication:** Issues signed HMAC-SHA256 JWT tokens containing `FullName`, `Email`, `NameIdentifier`, and `Role` claims.
 - **Refresh Token Rotation:** Employs single-use refresh tokens stored in SQL Server with cryptographic RNG generation.
 
 ### 2. Catalog & Category Management
 - **Category CRUD:** Create, read, update, and delete product categories.
 - **Product Management:** Complete product information handling (Title, Description, Image URL, Stock Quantity, Price).
 - **Search & Multi-Filter:** Filter by category, minimum price, maximum price, text search across titles and descriptions.
-- **Dynamic Pagination:** Server-side sorting (price_asc, price_desc, 
-ame_asc, 
-ame_desc) with custom page sizes.
+- **Dynamic Pagination:** Server-side sorting (`price_asc`, `price_desc`, `name_asc`, `name_desc`) with custom page sizes.
 
 ### 3. Cart, Checkout & Stripe Payment
 - **Price Verification:** Recalculates cart amounts strictly on the server to prevent front-end client price tampering.
 - **Stripe Hosted Checkout:** Formats line items with cents conversion, sets redirect callback URLs, and returns Stripe session links.
-- **Checkout History:** Logs checkout history into Achieve entity for auditing and cart recovery analysis.
+- **Checkout History:** Logs checkout history into `Achieve` entity for auditing and cart recovery analysis.
 
 ### 4. Order Lifecycle Management
 - **Order Placement:** Converts cart items into permanent order entities and captures unit prices at the time of purchase.
 - **Ownership Verification:** Users can only view and cancel their own orders; Admins can view all orders.
-- **Status State Machine:** Orders transition across Pending ➔ Processing ➔ Shipped ➔ Delivered (or Cancelled).
-- **Cancellation Constraints:** Customers can only cancel orders while status is Pending.
+- **Status State Machine:** Orders transition across `Pending` ➔ `Processing` ➔ `Shipped` ➔ `Delivered` (or `Cancelled`).
+- **Cancellation Constraints:** Customers can only cancel orders while status is `Pending`.
 
 ---
 
@@ -334,57 +349,57 @@ ame_desc) with custom page sizes.
 
 | # | Engineering Challenge | Problem & Risk | Technical Approach & Solution | Key Benefit |
 |---|----------------------|----------------|--------------------------------|-------------|
-| **1** | **Cart Price Tampering** | Malicious clients altering product prices in JSON payloads before payment. | Server-side price recalculation in OrderService & CartService fetching prices directly from DB. | 100% financial accuracy; zero reliance on untrusted client inputs. |
-| **2** | **Session Hijacking & Replay Attacks** | Stolen static refresh tokens allowing permanent unauthorized access. | Single-use Refresh Token Rotation with 64-byte RandomNumberGenerator cryptographic tokens. | Stolen tokens are immediately rendered useless upon rotation. |
-| **3** | **Memory Exhaustion on Catalog Browsing** | Loading large product tables into web server RAM for filtering and pagination. | Deferred IQueryable pipeline with AsNoTracking() executing Skip() and Take() at database level. | Minimal RAM usage and fast, scalable response times under high traffic. |
-| **4** | **Database Exception Security Leaks** | Exposing raw SQL Server errors (PK, FK, NULL violations) to public API consumers. | Custom ExceptionHandlingMiddleware intercepting SqlException error numbers (2627, 515, 547). | Sanitized, descriptive HTTP status codes (409 Conflict, 400 Bad Request) without data leakage. |
-| **5** | **Inconsistent State on Registration Failure** | Users created in Identity tables without assigned roles when role mapping fails. | Compensating transaction logic in AuthenticationService rolling back user creation if role assignment fails. | Guarantees database consistency and eliminates orphaned user records. |
+| **1** | **Cart Price Tampering** | Malicious clients altering product prices in JSON payloads before payment. | Server-side price recalculation in `OrderService` & `CartService` fetching prices directly from DB. | 100% financial accuracy; zero reliance on untrusted client inputs. |
+| **2** | **Session Hijacking & Replay Attacks** | Stolen static refresh tokens allowing permanent unauthorized access. | Single-use Refresh Token Rotation with 64-byte `RandomNumberGenerator` cryptographic tokens. | Stolen tokens are immediately rendered useless upon rotation. |
+| **3** | **Memory Exhaustion on Catalog Browsing** | Loading large product tables into web server RAM for filtering and pagination. | Deferred `IQueryable` pipeline with `AsNoTracking()` executing `Skip()` and `Take()` at database level. | Minimal RAM usage and fast, scalable response times under high traffic. |
+| **4** | **Database Exception Security Leaks** | Exposing raw SQL Server errors (PK, FK, NULL violations) to public API consumers. | Custom `ExceptionHandlingMiddleware` intercepting `SqlException` error numbers (2627, 515, 547). | Sanitized, descriptive HTTP status codes (409 Conflict, 400 Bad Request) without data leakage. |
+| **5** | **Inconsistent State on Registration Failure** | Users created in Identity tables without assigned roles when role mapping fails. | Compensating transaction logic in `AuthenticationService` rolling back user creation if role assignment fails. | Guarantees database consistency and eliminates orphaned user records. |
 
 ---
 
 ## 🔌 API Endpoints Catalog (22 Verified Endpoints)
 
-### 🔑 Authentication (/api/Authentication)
+### 🔑 Authentication (`/api/Authentication`)
 | Method | Endpoint | Authorization | Description |
 |--------|----------|---------------|-------------|
-| POST | /api/Authentication/Create | Public | Register new user (First user becomes Admin) |
-| POST | /api/Authentication/Login | Public | Authenticate user and receive JWT + Refresh Token |
-| POST | /api/Authentication/refresh-token | Public | Refresh expired JWT using valid Refresh Token |
+| `POST` | `/api/Authentication/Create` | Public | Register new user (First user becomes Admin) |
+| `POST` | `/api/Authentication/Login` | Public | Authenticate user and receive JWT + Refresh Token |
+| `POST` | `/api/Authentication/refresh-token` | Public | Refresh expired JWT using valid Refresh Token |
 
-### 📦 Products (/api/Product)
+### 📦 Products (`/api/Product`)
 | Method | Endpoint | Authorization | Description |
 |--------|----------|---------------|-------------|
-| GET | /api/Product/all | Public | Retrieve list of all products |
-| GET | /api/Product | Public | Search, filter by category/price, sort, and paginate |
-| GET | /api/Product/Single/{id} | Public | Retrieve single product details by GUID |
-| POST | /api/Product/Add | Admin | Add new product to catalog |
-| PUT | /api/Product/Update | Admin | Update existing product |
-| DELETE | /api/Product/Delete/{id} | Admin | Delete product from catalog |
+| `GET` | `/api/Product/all` | Public | Retrieve list of all products |
+| `GET` | `/api/Product` | Public | Search, filter by category/price, sort, and paginate |
+| `GET` | `/api/Product/Single/{id}` | Public | Retrieve single product details by GUID |
+| `POST` | `/api/Product/Add` | Admin | Add new product to catalog |
+| `PUT` | `/api/Product/Update` | Admin | Update existing product |
+| `DELETE` | `/api/Product/Delete/{id}` | Admin | Delete product from catalog |
 
-### 🏷️ Categories (/api/Category)
+### 🏷️ Categories (`/api/Category`)
 | Method | Endpoint | Authorization | Description |
 |--------|----------|---------------|-------------|
-| GET | /api/Category/all | Public | Retrieve all product categories |
-| GET | /api/Category/Single/{id} | Public | Retrieve category by GUID |
-| POST | /api/Category/Add | Admin | Create a new category |
-| PUT | /api/Category/Update | Admin | Update existing category |
-| DELETE | /api/Category/Delete/{id} | Admin | Delete category |
+| `GET` | `/api/Category/all` | Public | Retrieve all product categories |
+| `GET` | `/api/Category/Single/{id}` | Public | Retrieve category by GUID |
+| `POST` | `/api/Category/Add` | Admin | Create a new category |
+| `PUT` | `/api/Category/Update` | Admin | Update existing category |
+| `DELETE` | `/api/Category/Delete/{id}` | Admin | Delete category |
 
-### 🛒 Cart & Checkout (/api/Cart & /api/Payment)
+### 🛒 Cart & Checkout (`/api/Cart` & `/api/Payment`)
 | Method | Endpoint | Authorization | Description |
 |--------|----------|---------------|-------------|
-| POST | /api/Cart/checkout | Authenticated | Validate cart prices & generate Stripe session URL |
-| POST | /api/Cart/Save-checkout | Authenticated | Archive cart items into checkout history (Achieve) |
-| GET | /api/Payment | Public | Retrieve supported payment methods |
+| `POST` | `/api/Cart/checkout` | Authenticated | Validate cart prices & generate Stripe session URL |
+| `POST` | `/api/Cart/Save-checkout` | Authenticated | Archive cart items into checkout history (`Achieve`) |
+| `GET` | `/api/Payment` | Public | Retrieve supported payment methods |
 
-### 📋 Orders (/api/Orders)
+### 📋 Orders (`/api/Orders`)
 | Method | Endpoint | Authorization | Description |
 |--------|----------|---------------|-------------|
-| POST | /api/Orders | Authenticated | Place a new order from cart with address & phone |
-| GET | /api/Orders | Authenticated | Retrieve order history for current authenticated user |
-| GET | /api/Orders/{id} | User/Admin | Get order by ID (Enforces ownership verification) |
-| PUT | /api/Orders/{id}/cancel | User/Admin | Cancel order (Only permitted if status is Pending) |
-| PUT | /api/Orders/{id}/status | Admin | Update order status (Pending ➔ Processing ➔ Shipped ➔ Delivered) |
+| `POST` | `/api/Orders` | Authenticated | Place a new order from cart with address & phone |
+| `GET` | `/api/Orders` | Authenticated | Retrieve order history for current authenticated user |
+| `GET` | `/api/Orders/{id}` | User/Admin | Get order by ID (Enforces ownership verification) |
+| `PUT` | `/api/Orders/{id}/cancel` | User/Admin | Cancel order (Only permitted if status is `Pending`) |
+| `PUT` | `/api/Orders/{id}/status` | Admin | Update order status (Pending ➔ Processing ➔ Shipped ➔ Delivered) |
 
 ---
 
@@ -396,15 +411,15 @@ ame_desc) with custom page sizes.
 - [Stripe Account](https://stripe.com) (for test API Secret Key)
 
 ### 1. Clone the Repository
-`ash
+```bash
 git clone https://github.com/AhmedSaye2d/ECommerceAppSolution.git
 cd ECommerceAppSolution
-`
+```
 
-### 2. Configure ppsettings.json
-Update ECommerce.Host/appsettings.json with your SQL Server connection string and credentials:
+### 2. Configure `appsettings.json`
+Update `ECommerce.Host/appsettings.json` with your SQL Server connection string and credentials:
 
-`json
+```json
 {
   "ConnectionStrings": {
     "Default": "Server=.;Database=ECommerceDb;Trusted_Connection=True;TrustServerCertificate=True;"
@@ -418,20 +433,20 @@ Update ECommerce.Host/appsettings.json with your SQL Server connection string an
     "Secretkey": "sk_test_YOUR_STRIPE_SECRET_KEY"
   }
 }
-`
+```
 
 ### 3. Apply EF Core Migrations
 Execute the migrations to generate database schema and initial seed data:
-`ash
+```bash
 dotnet ef database update --project ECommerce.Infrastructure --startup-project ECommerce.Host
-`
+```
 
 ### 4. Run the Application
-`ash
+```bash
 dotnet run --project ECommerce.Host
-`
+```
 Once launched, navigate to the interactive Swagger documentation:
-👉 https://localhost:44353/swagger
+👉 `https://localhost:44353/swagger`
 
 ---
 
@@ -447,10 +462,23 @@ Once launched, navigate to the interactive Swagger documentation:
 
 ## 🗺️ Project Roadmap & Future Enhancements
 
-- [ ] **Stripe Webhooks Receiver:** Implement webhook signature verification to handle asynchronous checkout.session.completed events.
+- [ ] **Stripe Webhooks Receiver:** Implement webhook signature verification to handle asynchronous `checkout.session.completed` events.
 - [ ] **Redis Distributed Caching:** Add Redis caching layer for high-demand category and catalog queries.
-- [ ] **Automated Unit & Integration Testing:** Implement xUnit test suites using WebApplicationFactory and in-memory test databases.
-- [ ] **Dockerization:** Add multi-stage Dockerfile and docker-compose.yml for unified SQL Server and API orchestration.
-- [ ] **Health Checks & OpenTelemetry:** Integrate /health endpoints and distributed tracing with Jaeger/Prometheus.
+- [ ] **Automated Unit & Integration Testing:** Implement xUnit test suites using `WebApplicationFactory` and in-memory test databases.
+- [ ] **Dockerization:** Add multi-stage `Dockerfile` and `docker-compose.yml` for unified SQL Server and API orchestration.
+- [ ] **Health Checks & OpenTelemetry:** Integrate `/health` endpoints and distributed tracing with Jaeger/Prometheus.
 
 ---
+
+## 👨‍💻 Author & Contact
+
+**Ahmed M. Sayed**
+- Specialization: C# & .NET Backend Development
+- GitHub: [@AhmedSaye2d](https://github.com/AhmedSaye2d)
+- Email: [ahmedmsayed42@gmail.com](mailto:ahmedmsayed42@gmail.com)
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
