@@ -3,9 +3,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Text.Json;
+using System.Threading.Tasks;
+
 namespace ECommerce.Infrastructure.MiddleWare
 {
+    /// <summary>
+    /// Centralized exception interceptor mapping low-level SQL Server and EF Core errors to standardized HTTP responses.
+    /// </summary>
     public class ExceptionHandlingMiddleware
     {
         private readonly RequestDelegate _next;
@@ -28,30 +34,31 @@ namespace ECommerce.Infrastructure.MiddleWare
 
                 if (ex.InnerException is SqlException innerException)
                 {
-                    logger.LogError(innerException, "SQl EXCPTION");
+                    logger.LogError(innerException, "SQL Server Database Exception Occurred");
+
                     switch (innerException.Number)
                     {
-                        case 2627: 
+                        case 2627: // Unique Constraint / Primary Key Violation
                             context.Response.StatusCode = StatusCodes.Status409Conflict;
                             await context.Response.WriteAsync(JsonSerializer.Serialize(new
                             {
-                                error = "Unique constraint violation"
+                                error = "Unique constraint violation. The resource already exists."
                             }));
                             break;
 
-                        case 515: 
+                        case 515: // Null Value Violation
                             context.Response.StatusCode = StatusCodes.Status400BadRequest;
                             await context.Response.WriteAsync(JsonSerializer.Serialize(new
                             {
-                                error = "Cannot insert null value"
+                                error = "A required field was null."
                             }));
                             break;
 
-                        case 547: 
+                        case 547: // Foreign Key Constraint Violation
                             context.Response.StatusCode = StatusCodes.Status400BadRequest;
                             await context.Response.WriteAsync(JsonSerializer.Serialize(new
                             {
-                                error = "An error occurred while processing your request (foreign key violation)"
+                                error = "Foreign key reference violation. Referenced resource does not exist."
                             }));
                             break;
 
@@ -59,33 +66,32 @@ namespace ECommerce.Infrastructure.MiddleWare
                             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                             await context.Response.WriteAsync(JsonSerializer.Serialize(new
                             {
-                                error = "A database error occurred"
+                                error = "A database error occurred while processing your request."
                             }));
                             break;
                     }
                 }
                 else
                 {
-                    logger.LogError(ex, "REALATED EFCORE EXCPTION");
+                    logger.LogError(ex, "Entity Framework Core Exception Occurred");
                     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                     await context.Response.WriteAsync(JsonSerializer.Serialize(new
                     {
-                        error = "An unexpected database error occurred"
+                        error = "An unexpected database update error occurred."
                     }));
                 }
             }
             catch (Exception ex)
             {
                 var logger = context.RequestServices.GetRequiredService<IAppLogger<ExceptionHandlingMiddleware>>();
-                logger.LogError(ex, "UNKnown Excption");
+                logger.LogError(ex, "Unhandled Application Exception Occurred");
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
                 await context.Response.WriteAsync(JsonSerializer.Serialize(new
                 {
-                    error = $"An error occurred: {ex.Message}"
+                    error = $"An unexpected error occurred: {ex.Message}"
                 }));
             }
         }
     }
 }
-
