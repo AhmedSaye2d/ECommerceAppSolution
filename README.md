@@ -210,3 +210,53 @@ sequenceDiagram
 `
 
 ---
+
+## 💳 Checkout & Stripe Payment Processing Workflow
+
+The checkout process guarantees transaction security and financial integrity:
+1. **Server-Side Price Verification:** Client-submitted prices are discarded. The backend queries SQL Server for the actual product prices, preventing price tampering.
+2. **Stripe Hosted Checkout:** Line items are formatted with description, name, and unit amount converted to cents (price * 100) and dispatched to Stripe Checkout API.
+3. **Order Snapshotting:** When an order is saved, unit prices are permanently recorded in OrderItem records so future product price updates never alter historical invoices.
+
+`mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as Shopper
+    participant CartCtrl as CartController
+    participant CartSvc as CartService
+    participant ProductRepo as ProductRepository
+    participant StripeSvc as StripePaymentService
+    participant StripeAPI as Stripe Checkout API
+    participant OrderCtrl as OrdersController
+    participant OrderSvc as OrderService
+    participant OrderRepo as OrderRepository
+    participant DB as SQL Server Database
+
+    rect rgb(240, 240, 255)
+    Note over Customer, StripeAPI: Phase 1: Cart Checkout & Stripe Session
+    Customer->>CartCtrl: POST /api/Cart/checkout (Cart Items, PaymentMethodId)
+    CartCtrl->>CartSvc: CheckOut(CheckOut DTO)
+    CartSvc->>ProductRepo: Fetch product records from DB
+    CartSvc->>CartSvc: Calculate true total amount (discard client prices)
+    CartSvc->>StripeSvc: Pay(totalAmount, verifiedProducts, carts)
+    StripeSvc->>StripeAPI: SessionService.CreateAsync(SessionCreateOptions)
+    StripeAPI-->>StripeSvc: Return Stripe Session Object (with hosted session.Url)
+    StripeSvc-->>CartCtrl: ServiceResponse(session.Url)
+    CartCtrl-->>Customer: 200 OK with redirect URL
+    Customer->>StripeAPI: User redirected to Stripe secure hosted payment page
+    end
+
+    rect rgb(255, 245, 245)
+    Note over Customer, DB: Phase 2: Order Creation & Historical Price Snapshot
+    Customer->>OrderCtrl: POST /api/Orders (CreateOrderDto + Auth Bearer Token)
+    OrderCtrl->>OrderSvc: CreateOrderAsync(orderDto, authenticatedUserId)
+    OrderSvc->>ProductRepo: Fetch product details
+    OrderSvc->>OrderSvc: Create OrderItems with unit price snapshot
+    OrderSvc->>OrderRepo: CreateOrderAsync(Order with OrderItems)
+    OrderRepo->>DB: INSERT into Orders & OrderItems (Status = Pending)
+    OrderSvc-->>OrderCtrl: ServiceResponse("Order placed successfully")
+    OrderCtrl-->>Customer: 200 OK
+    end
+`
+
+---
