@@ -74,3 +74,79 @@ graph TD
 4. **Host (Presentation):** ASP.NET Core Web API host managing routing, controller endpoints, dependency injection bootstrapping, and middleware pipeline registration.
 
 ---
+
+## 🗄️ Database Schema & Entity Relationship Diagram (ERD)
+
+The database design uses normalized relational schemas managed via EF Core Code-First migrations with decimal precision for currency amounts (decimal(18,2)) and foreign key constraints.
+
+`mermaid
+erDiagram
+    APP_USER ||--o{ REFRESH_TOKEN : "owns"
+    APP_USER ||--o{ ORDER : "places"
+    CATEGORY ||--o{ PRODUCT : "classifies"
+    ORDER ||--|{ ORDER_ITEM : "contains"
+    PRODUCT ||--o{ ORDER_ITEM : "ordered in"
+    PAYMENT_METHOD ||--o{ ORDER : "paid via"
+
+    APP_USER {
+        string Id PK "Identity GUID"
+        string FullName "User Full Name"
+        string Email "Unique Email Address"
+        string UserName "User Name"
+    }
+
+    REFRESH_TOKEN {
+        Guid Id PK
+        string Token "Cryptographic Base64 Token"
+        string UserId FK "References AppUser"
+    }
+
+    CATEGORY {
+        Guid Id PK
+        string Name "Category Name"
+    }
+
+    PRODUCT {
+        Guid Id PK
+        string Name "Product Title"
+        string Description "Detailed Description"
+        decimal Price "Precision 18,2"
+        string Image "Image URL/Path"
+        int Quantity "Available Stock"
+        Guid CategoryId FK "References Category"
+    }
+
+    ORDER {
+        Guid Id PK
+        string UserId FK "References AppUser"
+        datetime OrderDate "UTC Timestamp"
+        decimal TotalAmount "Server Verified Total"
+        string ShippingAddress "Physical Delivery Destination"
+        string PhoneNumber "Contact Telephone"
+        string Status "Pending, Processing, Shipped, Delivered, Cancelled"
+        Guid PaymentMethodId FK "References PaymentMethod"
+    }
+
+    ORDER_ITEM {
+        Guid Id PK
+        Guid OrderId FK "References Order"
+        Guid ProductId FK "References Product"
+        int Quantity "Units Purchased"
+        decimal Price "Historical Unit Price Snapshot"
+    }
+
+    PAYMENT_METHOD {
+        Guid Id PK
+        string Name "CreditCard, etc."
+    }
+
+    ACHIEVE {
+        Guid Id PK
+        Guid ProductId "Product Reference"
+        Guid UserId "Customer Reference"
+        int Quantity "Quantity Purchased"
+        datetime CreatedData "Audit Timestamp"
+    }
+`
+
+---
